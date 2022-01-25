@@ -198,6 +198,11 @@ def create_chat(current_user: User = Depends(get_current_active_user)):
     }
 
 
+@app.get("/chats/")
+def get_chats(current_user: User = Depends(get_current_active_user)):
+    return [chat for chat in db.db["chats"] if current_user.username in chat["members"]]
+
+
 @app.delete("/chats/{chat_id}")
 def delete_chat(chat_id: int, current_user: User = Depends(get_current_active_user)):
     if not chat_exists(chat_id) or not user_in_chat(chat_id, current_user.username):
