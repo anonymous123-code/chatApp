@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
 from os import environ
 from typing import Optional
 
@@ -11,6 +12,7 @@ from starlette import status
 from db import db
 from defs import UserInDB, User, TokenData
 
+load_dotenv()
 SECRET_KEY = environ.get("AUTHKEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
