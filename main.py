@@ -40,6 +40,15 @@ def is_owner(chat_id: int, message_id: int, username: str):
     return db.db["chats"][chat_id]["messages"][message_id]["author"] == username
 
 
+def only_allow_message_owner_edits(chat_id: int, message_id: int, username: string):
+    if not chat_exists(chat_id) or not user_in_chat(chat_id, username):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed to edit chat")
+    if not message_exists(chat_id, message_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Message doesn't exist")
+    if not is_owner(chat_id, message_id, username):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only the sender is able to edit")
+
+
 def generate_random_invite(length: int):
     charset = string.ascii_letters + string.digits
     return ''.join(random.SystemRandom().choice(charset) for _ in range(length))
@@ -147,13 +156,16 @@ def send_message(chat_id: int, msg: str, current_user: User = Depends(get_curren
 
 @app.delete("/chat/{chat_id}/messages/{message_id}")
 def delete_message(chat_id: int, message_id: int, current_user: User = Depends(get_current_active_user)):
-    if not chat_exists(chat_id) or not user_in_chat(chat_id, current_user.username):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed to edit chat")
-    if not message_exists(chat_id, message_id):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Message doesn't exist")
-    if not is_owner(chat_id, message_id, current_user.username):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only the sender is able to edit")
+    only_allow_message_owner_edits(chat_id, message_id, current_user.username)
     db.db["chats"][chat_id]["messages"].pop(message_id)
+    db.save()
+
+
+@app.post("/chat/{chat_id}/messages/{message_id}")
+def edit_message(chat_id: int, message_id: int, message: str, current_user: User = Depends(get_current_active_user)):
+    only_allow_message_owner_edits(chat_id, message_id, current_user.username)
+    db.db["chats"][chat_id]["messages"][message_id]["msg"] = message
+    db.db["chats"][chat_id]["messages"][message_id]["edited"] = True
     db.save()
 
 
