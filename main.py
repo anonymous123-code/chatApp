@@ -128,7 +128,7 @@ def get_messages(chat_id: int, current_user: User = Depends(get_current_active_u
     return db.db["chats"][chat_id]["messages"]
 
 
-@app.put("/chat/{chat_id}/messages")
+@app.post("/chat/{chat_id}/messages")
 def send_message(chat_id: int, msg: str, current_user: User = Depends(get_current_active_user)):
     if not chat_exists(chat_id) or not user_in_chat(chat_id, current_user.username):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed to send in chat")
@@ -158,7 +158,7 @@ def get_members(chat_id: int, current_user: User = Depends(get_current_active_us
     return db.db["chats"][chat_id]["participating_users"]
 
 
-@app.put("/chat/")
+@app.post("/chat/")
 def create_chat(current_user: User = Depends(get_current_active_user)):
     db.db["chats"].append({"messages": [], "participating_users": [current_user.username]})
     db.save()
