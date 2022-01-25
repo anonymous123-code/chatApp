@@ -128,5 +128,12 @@ def create_chat(current_user: User = Depends(get_current_active_user)):
     db.db["chats"].append({"messages": [], "participating_users": [current_user.username]})
     db.save()
     return {
-        "id": len(db.db["chats"])-1
+        "id": len(db.db["chats"]) - 1
     }
+
+
+@app.get("/chat/{chat_id}/members")
+def get_members(chat_id: int, current_user: User = Depends(get_current_active_user)):
+    if current_user.username not in db.db["chats"][chat_id]["participating_users"]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not a member")
+    return db.db["chats"][chat_id]["participating_users"]
