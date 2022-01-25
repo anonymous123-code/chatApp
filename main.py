@@ -177,6 +177,16 @@ def get_members(chat_id: int, current_user: User = Depends(get_current_active_us
     return db.db["chats"][chat_id]["participating_users"]
 
 
+@app.delete("/chat/{chat_id}/members/{member_name}")
+def kick_member(chat_id, member_name, current_user: User = Depends(get_current_active_user)):
+    if not chat_exists(chat_id) or not user_in_chat(chat_id, current_user.username):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed to edit chat")
+    if not user_in_chat(chat_id, member_name):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member not found")
+    db.db["chats"][chat_id]["participating_users"].pop(member_name)
+    db.save()
+
+
 @app.post("/chat/")
 def create_chat(current_user: User = Depends(get_current_active_user)):
     db.db["chats"].append({"messages": [], "participating_users": [current_user.username]})
@@ -191,3 +201,4 @@ def delete_chat(chat_id: int, current_user: User = Depends(get_current_active_us
     if not chat_exists(chat_id) or not user_in_chat(chat_id, current_user.username):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed to edit chat")
     db.db["chats"].pop(chat_id)
+    db.save()
