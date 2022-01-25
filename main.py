@@ -134,6 +134,12 @@ def generate_invite(chat_id: int, current_user: User = Depends(get_current_activ
     }
 
 
+@app.get("/chat/{chat_id}/invites")
+def get_invites(chat_id: int):
+    return [invite for invite, chat in dict.items() if chat == chat_id]
+
+
+
 @app.get("/chat/{chat_id}/messages")
 def get_messages(chat_id: int, current_user: User = Depends(get_current_active_user)):
     if not chat_exists(chat_id) or not user_in_chat(chat_id, current_user.username):
