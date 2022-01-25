@@ -184,3 +184,10 @@ def create_chat(current_user: User = Depends(get_current_active_user)):
     return {
         "id": len(db.db["chats"]) - 1
     }
+
+
+@app.delete("/chat/{chat_id}")
+def delete_chat(chat_id: int, current_user: User = Depends(get_current_active_user)):
+    if not chat_exists(chat_id) or not user_in_chat(chat_id, current_user.username):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed to edit chat")
+    db.db["chats"].pop(chat_id)
