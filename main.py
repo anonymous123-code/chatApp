@@ -13,7 +13,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from auth import get_password_hash, get_current_active_user, User, authenticate_user, ACCESS_TOKEN_EXPIRE_MINUTES, \
     create_access_token
-from db import db
+import db
 from defs import Token
 
 app = FastAPI()
@@ -40,7 +40,7 @@ def add_user(user_db, username, password, full_name, email, disabled=False):
 
 @app.post("/token", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = authenticate_user(db["users"], form_data.username, form_data.password)
+    user = authenticate_user(db.db["users"], form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -58,9 +58,10 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 async def register(username, password, full_name, email):
     if not check_email(email):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="email is invalid")
-    if username in db["users"]:
+    if username in db.db["users"]:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="username already registered")
-    add_user(db["users"], username, password, full_name, email)
+    add_user(db.db["users"], username, password, full_name, email)
+    db.save()
 
 
 @app.get("/users/me/", response_model=User)
@@ -70,35 +71,38 @@ async def read_users_me(current_user: User = Depends(get_current_active_user)):
 
 @app.get("/users/{username}", response_model=User)
 async def get_user(username):
-    return db["users"][username]
+    return db.db["users"][username]
 
 
 @app.get("/invite/{invite}")
 def use_invite(invite, current_user: User = Depends(get_current_active_user)):
-    if invite not in db["invites"]:
+    if invite not in db.db["invites"]:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid invite")
-    if current_user.username in db["chats"][db["invites"][invite]]["participating_users"]:
+    if current_user.username in db.db["chats"][db.db["invites"][invite]]["participating_users"]:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Joined already")
-    db["chats"][db["invites"][invite]]["participating_users"].append(current_user.username)
+    db.db["chats"][db.db["invites"][invite]]["participating_users"].append(current_user.username)
+    db.save()
 
 
 @app.delete("/invite/{invite}")
 def delete_invite(invite, current_user: User = Depends(get_current_active_user)):
-    if invite not in db["invites"]:
+    if invite not in db.db["invites"]:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid invite")
-    if current_user.username not in db["chats"][db["invites"][invite]]["participating_users"]:
+    if current_user.username not in db.db["chats"][db.db["invites"][invite]]["participating_users"]:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Non-member user can't delete invite")
-    db["invites"].pop(invite)
+    db.db["invites"].pop(invite)
+    db.save()
 
 
 @app.get("/chat/{chat_id}/invite")
 def generate_invite(chat_id: int, current_user: User = Depends(get_current_active_user)):
-    if current_user.username not in db["chats"][chat_id]["participating_users"]:
+    if current_user.username not in db.db["chats"][chat_id]["participating_users"]:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Non-member user can't create invites")
     invite = generate_random_invite(10)
-    while invite in db["invites"]:
+    while invite in db.db["invites"]:
         invite = generate_invite(10)
-    db["invites"][invite] = chat_id
+    db.db["invites"][invite] = chat_id
+    db.save()
     return {
         "invite": invite
     }
@@ -106,15 +110,14 @@ def generate_invite(chat_id: int, current_user: User = Depends(get_current_activ
 
 @app.get("/chat/{chat_id}/messages")
 def get_messages(chat_id: int, current_user: User = Depends(get_current_active_user)):
-    if chat_id not in db["chats"] or current_user.username not in db["chats"][chat_id]["participating_users"]:
+    if chat_id >= len(db.db["chats"]) or current_user.username not in db.db["chats"][chat_id]["participating_users"]:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed to view chat")
-    return db["chats"][chat_id]["messages"]
+    return db.db["chats"][chat_id]["messages"]
 
 
 @app.put("/chat/{chat_id}/messages")
 def root(chat_id: int, msg: str, current_user: User = Depends(get_current_active_user)):
-    if chat_id not in db["chats"]:
-        db["chats"][chat_id] = {"messages": [], "participating_users": [current_user.username]}
-    if current_user.username not in db["chats"][chat_id]["participating_users"]:
+    if chat_id >= len(db.db["chats"]) or current_user.username not in db.db["chats"][chat_id]["participating_users"]:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed to send in chat")
-    db["chats"][chat_id]["messages"].append({"msg": msg})
+    db.db["chats"][chat_id]["messages"].append({"msg": msg})
+    db.save()
