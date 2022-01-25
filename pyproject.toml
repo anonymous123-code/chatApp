@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "pythonproject"
+version = "0.1.0"
+description = ""
+authors = ["anonymous123-code <61744596+anonymous123-code@users.noreply.github.com>"]
+
+[tool.poetry.dependencies]
+fastapi = "^0.73"
+uvicorn = "^0.17.0"
+python-jose = "^3.3.0"
+passlib = "^1.7.4"
+python-multipart = "^0.0.5"
+python-dotenv = "^0.19.2"
+bcrypt = "^3.2.0"
+python = "^3.8"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
