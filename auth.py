@@ -9,7 +9,7 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 from starlette import status
 
-from main import db
+from db import db
 
 
 class Token(BaseModel):
