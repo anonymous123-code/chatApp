@@ -4,6 +4,7 @@
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 import random
 import string
+import time
 from datetime import timedelta
 
 from fastapi import Depends, FastAPI, HTTPException, status
@@ -131,7 +132,12 @@ def get_messages(chat_id: int, current_user: User = Depends(get_current_active_u
 def send_message(chat_id: int, msg: str, current_user: User = Depends(get_current_active_user)):
     if not chat_exists(chat_id) or not user_in_chat(chat_id, current_user.username):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed to send in chat")
-    db.db["chats"][chat_id]["messages"].append({"msg": msg})
+    db.db["chats"][chat_id]["messages"].append({
+        "msg": msg,
+        "timestamp": time.time_ns(),
+        "edited": False,
+        "author": current_user.username
+    })
     db.save()
 
 
