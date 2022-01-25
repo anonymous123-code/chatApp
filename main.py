@@ -67,7 +67,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@app.put("/users/register")
+@app.post("/users/register")
 async def register(username, password, full_name, email):
     if not check_email(email):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="email is invalid")
