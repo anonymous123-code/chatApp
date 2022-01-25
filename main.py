@@ -120,7 +120,7 @@ def delete_invite(invite, current_user: User = Depends(get_current_active_user))
     db.save()
 
 
-@app.get("/chat/{chat_id}/invite")
+@app.post("/chat/{chat_id}/invite")
 def generate_invite(chat_id: int, current_user: User = Depends(get_current_active_user)):
     if not chat_exists(chat_id) or not user_in_chat(chat_id, current_user.username):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Non-member user can't create invites")
