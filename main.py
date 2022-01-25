@@ -21,7 +21,7 @@ def check_email(email):
 
 
 def chat_exists(chat_id: int):
-    return chat_id < len(db.db["chats"]) and chat_id >= 0
+    return len(db.db["chats"]) > chat_id >= 0
 
 
 def user_in_chat(chat_id: int, username: str):
@@ -180,11 +180,12 @@ def get_members(chat_id: int, current_user: User = Depends(get_current_active_us
 
 
 @app.delete("/chats/{chat_id}/members/{member_name}")
-def kick_member(chat_id, member_name, current_user: User = Depends(get_current_active_user)):
+def kick_member(chat_id: int, member_name, current_user: User = Depends(get_current_active_user)):
     if not chat_exists(chat_id) or not user_in_chat(chat_id, current_user.username):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed to edit chat")
     if not user_in_chat(chat_id, member_name):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member not found")
+    #FIXME pop braucht index, nicht element
     db.db["chats"][chat_id]["members"].pop(member_name)
     db.save()
 
