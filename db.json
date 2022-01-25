@@ -1,1 +1,57 @@
-{"chats": [{"messages": [], "members": ["anonym", "dummy", "anonym123"]}], "invites": {}, "users": {"anonym": {"username": "anonym", "full_name": "ohphn", "email": "a@a.a", "hashed_password": "$2b$12$1KmKRoUOYbCYpX/niSNpde4lZQkzXwQbxNWFVlfJqyb/OV.Cu4OFG", "disabled": false}, "anonym123": {"username": "anonym123", "full_name": "ohphn", "email": "a@a.a", "hashed_password": "$2b$12$bKeVp1uTpiw6af1vUMK0w.FYaT.FtwhyFPsnrWdvrMduLq5OyCxFS", "disabled": false}, "dummy": {"username": "dummy", "full_name": "ohphn", "email": "a@a.a", "hashed_password": "$2b$12$NhYkCqf3wOuvY3vtFj/qJ.PFkV2WcheYJpVaV29BBp4an1IeC/k5W", "disabled": false}}}
+{
+    "chats": [
+        {
+            "messages": [],
+            "members": [
+                "anonym123"
+            ]
+        },
+        {
+            "messages": [],
+            "members": [
+                "anonym123"
+            ]
+        },
+        {
+            "messages": [
+                {
+                    "msg": "1",
+                    "timestamp": 1643128557130496400,
+                    "edited": true,
+                    "author": "anonym123"
+                }
+            ],
+            "members": [
+                "anonym123",
+                "anonym"
+            ]
+        }
+    ],
+    "invites": {
+        "EGN99nvWzy": 2,
+        "rJGA6LX9dQ": 2
+    },
+    "users": {
+        "anonym": {
+            "username": "anonym",
+            "full_name": "ohphn",
+            "email": "a@a.a",
+            "hashed_password": "$2b$12$1KmKRoUOYbCYpX/niSNpde4lZQkzXwQbxNWFVlfJqyb/OV.Cu4OFG",
+            "disabled": false
+        },
+        "anonym123": {
+            "username": "anonym123",
+            "full_name": "ohphn",
+            "email": "a@a.a",
+            "hashed_password": "$2b$12$bKeVp1uTpiw6af1vUMK0w.FYaT.FtwhyFPsnrWdvrMduLq5OyCxFS",
+            "disabled": false
+        },
+        "dummy": {
+            "username": "dummy",
+            "full_name": "ohphn",
+            "email": "a@a.a",
+            "hashed_password": "$2b$12$NhYkCqf3wOuvY3vtFj/qJ.PFkV2WcheYJpVaV29BBp4an1IeC/k5W",
+            "disabled": false
+        }
+    }
+}

@@ -21,7 +21,7 @@ def check_email(email):
 
 
 def chat_exists(chat_id: int):
-    return chat_id < len(db.db["chats"]) or chat_id >= 0
+    return chat_id < len(db.db["chats"]) and chat_id >= 0
 
 
 def user_in_chat(chat_id: int, username: str):
@@ -134,7 +134,7 @@ def generate_invite(chat_id: int, current_user: User = Depends(get_current_activ
 def get_invites(chat_id: int, current_user: User = Depends(get_current_active_user)):
     if not chat_exists(chat_id) or not user_in_chat(chat_id, current_user.username):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed to view chat invites")
-    return [invite for invite, chat in db.db["chats"][chat_id]["invites"].items() if chat == chat_id]
+    return [invite for invite, chat in db.db["invites"].items() if chat == chat_id]
 
 
 @app.get("/chats/{chat_id}/messages")
@@ -200,7 +200,7 @@ def create_chat(current_user: User = Depends(get_current_active_user)):
 
 @app.get("/chats/")
 def get_chats(current_user: User = Depends(get_current_active_user)):
-    return [chat for chat in db.db["chats"] if current_user.username in chat["members"]]
+    return {i: chat for i, chat in enumerate(db.db["chats"]) if current_user.username in chat["members"]}
 
 
 @app.delete("/chats/{chat_id}")
