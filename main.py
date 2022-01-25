@@ -131,7 +131,9 @@ def generate_invite(chat_id: int, current_user: User = Depends(get_current_activ
 
 
 @app.get("/chat/{chat_id}/invites")
-def get_invites(chat_id: int):
+def get_invites(chat_id: int, current_user: User = Depends(get_current_active_user)):
+    if not chat_exists(chat_id) or not user_in_chat(chat_id, current_user.username):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed to view chat invites")
     return [invite for invite, chat in db.db["chats"][chat_id]["invites"].items() if chat == chat_id]
 
 
