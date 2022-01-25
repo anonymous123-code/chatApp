@@ -14,7 +14,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from auth import get_password_hash, get_current_active_user, User, authenticate_user, ACCESS_TOKEN_EXPIRE_MINUTES, \
     create_access_token
 import db
-from defs import Token
+from defs import Token, PublicUser
 
 app = FastAPI()
 
@@ -69,8 +69,8 @@ async def read_users_me(current_user: User = Depends(get_current_active_user)):
     return current_user
 
 
-@app.get("/users/{username}", response_model=User)
-async def get_user(username):
+@app.get("/users/{username}", response_model=PublicUser)
+async def get_user(username, _=Depends(get_current_active_user)):
     return db.db["users"][username]
 
 
