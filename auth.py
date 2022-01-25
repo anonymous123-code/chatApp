@@ -6,31 +6,10 @@ from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from passlib.context import CryptContext
-from pydantic import BaseModel
 from starlette import status
 
 from db import db
-
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-
-class TokenData(BaseModel):
-    username: Optional[str] = None
-
-
-class User(BaseModel):
-    username: str
-    email: Optional[str] = None
-    full_name: Optional[str] = None
-    disabled: Optional[bool] = None
-
-
-class UserInDB(User):
-    hashed_password: str
-
+from defs import UserInDB, User, TokenData
 
 SECRET_KEY = environ.get("AUTHKEY")
 ALGORITHM = "HS256"
