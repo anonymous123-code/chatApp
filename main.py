@@ -36,6 +36,10 @@ def message_exists(chat_id: int, message_id: int):
     return message_id < len(db.db["chats"][chat_id]["messages"])
 
 
+def is_owner(chat_id: int, message_id: int, username: str):
+    return db.db["chats"][chat_id]["messages"][message_id]["author"] == username
+
+
 def generate_random_invite(length: int):
     charset = string.ascii_letters + string.digits
     return ''.join(random.SystemRandom().choice(charset) for _ in range(length))
@@ -147,6 +151,8 @@ def delete_message(chat_id: int, message_id: int, current_user: User = Depends(g
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed to edit chat")
     if not message_exists(chat_id, message_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Message doesn't exist")
+    if not is_owner(chat_id, message_id, current_user.username):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only the sender is able to edit")
     db.db["chats"][chat_id]["messages"].pop(message_id)
     db.save()
 
