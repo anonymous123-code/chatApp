@@ -25,7 +25,7 @@ def chat_exists(chat_id: int):
 
 
 def user_in_chat(chat_id: int, username: str):
-    return username in db.db["chats"][chat_id]["participating_users"]
+    return username in db.db["chats"][chat_id]["members"]
 
 
 def message_exists(chat_id: int, message_id: int):
@@ -100,9 +100,9 @@ async def get_user(username, _=Depends(get_current_active_user)):
 def use_invite(invite, current_user: User = Depends(get_current_active_user)):
     if invite not in db.db["invites"]:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid invite")
-    if current_user.username in db.db["chats"][db.db["invites"][invite]]["participating_users"]:
+    if current_user.username in db.db["chats"][db.db["invites"][invite]]["members"]:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Joined already")
-    db.db["chats"][db.db["invites"][invite]]["participating_users"].append(current_user.username)
+    db.db["chats"][db.db["invites"][invite]]["members"].append(current_user.username)
     db.save()
 
 
@@ -110,7 +110,7 @@ def use_invite(invite, current_user: User = Depends(get_current_active_user)):
 def delete_invite(invite, current_user: User = Depends(get_current_active_user)):
     if invite not in db.db["invites"]:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid invite")
-    if current_user.username not in db.db["chats"][db.db["invites"][invite]]["participating_users"]:
+    if current_user.username not in db.db["chats"][db.db["invites"][invite]]["members"]:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Non-member user can't delete invite")
     db.db["invites"].pop(invite)
     db.save()
@@ -174,7 +174,7 @@ def edit_message(chat_id: int, message_id: int, message: str, current_user: User
 def get_members(chat_id: int, current_user: User = Depends(get_current_active_user)):
     if not chat_exists(chat_id) or not user_in_chat(chat_id, current_user.username):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not a member")
-    return db.db["chats"][chat_id]["participating_users"]
+    return db.db["chats"][chat_id]["members"]
 
 
 @app.delete("/chat/{chat_id}/members/{member_name}")
@@ -183,13 +183,13 @@ def kick_member(chat_id, member_name, current_user: User = Depends(get_current_a
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed to edit chat")
     if not user_in_chat(chat_id, member_name):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member not found")
-    db.db["chats"][chat_id]["participating_users"].pop(member_name)
+    db.db["chats"][chat_id]["members"].pop(member_name)
     db.save()
 
 
 @app.post("/chat/")
 def create_chat(current_user: User = Depends(get_current_active_user)):
-    db.db["chats"].append({"messages": [], "participating_users": [current_user.username]})
+    db.db["chats"].append({"messages": [], "members": [current_user.username]})
     db.save()
     return {
         "id": len(db.db["chats"]) - 1

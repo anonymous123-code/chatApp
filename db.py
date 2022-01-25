@@ -10,5 +10,5 @@ f.close()
 
 def save():
     f = open(DB_PATH, "wt")
-    f.write(json.dumps(db))
+    f.write(json.dumps(db, indent=4))
     f.close()
