@@ -1,5 +1,4 @@
 import asyncio
-import base64
 import json
 
 import pytest
@@ -7,7 +6,7 @@ from fastapi.testclient import TestClient
 from jose.utils import base64url_decode
 from starlette import status
 
-from defs import UserInDB
+from defs import UserInDB, User
 
 
 @pytest.fixture
@@ -95,11 +94,8 @@ def test_register_user(test_client, reset_db, auth):
     data = test_client.post("/users/register?username=hi&password=secret&full_name=Hello&email=h%40h.h")
     assert data.status_code == status.HTTP_200_OK
     assert "hi" in reset_db.db["users"]
-    assert reset_db.db["users"]["hi"]["full_name"] == "Hello"
-    assert reset_db.db["users"]["hi"]["email"] == "h@h.h"
+    assert User(**reset_db.db["users"]["hi"]) == User(username="hi", full_name="Hello", email="h@h.h", disabled=False)
     assert auth.verify_password("secret", reset_db.db["users"]["hi"]["hashed_password"])
-    assert reset_db.db["users"]["hi"]["username"] == "hi"
-    assert not reset_db.db["users"]["hi"]["disabled"]
 
 
 @pytest.mark.test_users([{}])
