@@ -85,6 +85,15 @@ def add_test_users(reset_db, auth, request):
 
 
 @pytest.fixture
+def token(add_test_users, auth, request):
+    marker = request.node.get_closest_marker("token_test_user_index")
+    index = int(marker.args[0] if marker else 0)
+    if len(add_test_users) <= index:
+        raise KeyError("Index invalid")
+    return auth.create_access_token({"sub": add_test_users[index]["username"]})
+
+
+@pytest.fixture
 def test_client(reset_db, auth):
     from main import app
     return TestClient(app)

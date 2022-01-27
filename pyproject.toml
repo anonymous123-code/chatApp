@@ -22,4 +22,5 @@ build-backend = "poetry.core.masonry.api"
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "test_users: configures the users added by add_test_users fixture",
+    "token_test_user_index: configures the index of the testuser to genereate the token for"
 ]
