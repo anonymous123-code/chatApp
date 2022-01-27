@@ -171,3 +171,24 @@ def test_receive_token_wrong_password(test_client, add_test_users, auth):
     })
     assert data.status_code == status.HTTP_401_UNAUTHORIZED
     assert data.json()["detail"] == "Incorrect username or password"
+
+
+@pytest.mark.test_users([{}])
+def test_get_user_me(test_client, add_test_users, token):
+    data = test_client.get("/users/me/", headers={
+        "Authorization": f"Bearer {token}"
+    })
+
+    assert data.status_code == status.HTTP_200_OK
+    assert User(**data.json()) == User(**add_test_users[0])
+
+
+@pytest.mark.test_users([{}, {}])
+@pytest.mark.token_test_user_index(1)
+def test_get_user_me_2(test_client, add_test_users, token):
+    data = test_client.get("/users/me/", headers={
+        "Authorization": f"Bearer {token}"
+    })
+
+    assert data.status_code == status.HTTP_200_OK
+    assert User(**data.json()) == User(**add_test_users[1])
