@@ -39,7 +39,7 @@ def add_test_users(reset_db, auth, request):
         if "username" not in u:
             u["username"] = "test" + str(i)
         if "full_name" not in u:
-            u["full_name"] = "test" + str(i) + " Test"
+            u["full_name"] = f"test{str(i)} Test"
         if "email" not in u:
             u["email"] = "test@test.test"
         if "password" not in u:
@@ -93,8 +93,25 @@ def test_register_user(test_client, reset_db, auth):
     assert not reset_db.db["users"]["hi"]["disabled"]
 
 
-@pytest.mark.test_users([{"username": "test1"}])
-def test_register_user_double_username(test_client, add_test_users):
-    data = test_client.post("/users/register?username=test1&password=secret&full_name=Hello&email=h%40h.h")
+@pytest.mark.test_users([{}])
+def test_register_user_double_username(test_client, add_test_users, reset_db):
+    old_reset_db = reset_db.db.copy()
+    data = test_client.post(f"/users/register?username={add_test_users[0]['username']}&password=secret&full_name"
+                            f"=Hello&email=h%40h.h")
     assert data.status_code == status.HTTP_401_UNAUTHORIZED
     assert data.json()["detail"] == "username already registered"
+    assert old_reset_db == reset_db.db
+
+
+def test_register_user_invalid_email(test_client):
+    data = test_client.post("/users/register?username=test1&password=secret&full_name=Hello&email=hh.h")
+    assert data.status_code == status.HTTP_401_UNAUTHORIZED
+    assert data.json()["detail"] == "email is invalid"
+
+
+@pytest.mark.test_users([{}])
+def test_register_user_double_username_invalid_email(test_client, add_test_users, reset_db):
+    data = test_client.post(f"/users/register?username={add_test_users[0]['username']}&password=secret&full_name"
+                            f"=Hello&email=h%40hh")
+    assert data.status_code == status.HTTP_401_UNAUTHORIZED
+    assert data.json()["detail"] == "email is invalid"
