@@ -1,6 +1,13 @@
+import asyncio
+import base64
+import json
+
 import pytest
 from fastapi.testclient import TestClient
+from jose.utils import base64url_decode
 from starlette import status
+
+from defs import UserInDB
 
 
 @pytest.fixture
@@ -67,6 +74,7 @@ def add_test_users(reset_db, auth, request):
             "disabled": user["disabled"]
         }
         generated_users.append(reset_db.db["users"][user["username"]])
+        generated_users[len(generated_users)-1]["password"] = user["password"]
         reset_db.save()
     yield generated_users.copy()
     for user in generated_users:
@@ -115,3 +123,27 @@ def test_register_user_double_username_invalid_email(test_client, add_test_users
                             f"=Hello&email=h%40hh")
     assert data.status_code == status.HTTP_401_UNAUTHORIZED
     assert data.json()["detail"] == "email is invalid"
+
+
+@pytest.mark.test_users([{}])
+def test_receive_token(test_client, add_test_users, auth):
+    data = test_client.post(f"/token", data={
+        "username": add_test_users[0]["username"],
+        "password": add_test_users[0]["password"]
+    })
+
+    assert data.status_code == 200
+    assert data.json()["token_type"] == "bearer"
+    token = data.json()["access_token"]
+    token_parts = token.split(".")
+    assert len(token_parts) == 3
+
+    def base64to_string(i):
+        return base64url_decode(i.encode("utf-8")).decode("utf-8")
+
+    assert base64to_string(token_parts[0]) == "{\"alg\":\"HS256\",\"typ\":\"JWT\"}"
+    assert json.loads(base64to_string(token_parts[1]))["sub"] == add_test_users[0]["username"]
+    current_user = asyncio.run(auth.get_current_user(token))
+    assert current_user == UserInDB(**add_test_users[0])
+
+
