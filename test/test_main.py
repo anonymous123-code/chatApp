@@ -26,6 +26,12 @@ def reset_db(open_db):
 
 
 @pytest.fixture
+def auth(reset_db):
+    import auth
+    return auth
+
+
+@pytest.fixture
 def add_test_users(reset_db, auth, request):
     # Example data:
     # [{"username":"test1","full_name": "full_name","email": "a@a.a","password":"secret","disabled":False}]
@@ -68,12 +74,6 @@ def add_test_users(reset_db, auth, request):
             reset_db.db["users"].pop(user["username"])
         except KeyError:
             pass
-
-
-@pytest.fixture
-def auth(reset_db):
-    import auth
-    return auth
 
 
 @pytest.fixture
