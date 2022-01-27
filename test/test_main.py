@@ -1,5 +1,7 @@
 import asyncio
 import json
+import time
+from datetime import timedelta
 
 import pytest
 from fastapi.testclient import TestClient
@@ -192,3 +194,33 @@ def test_get_user_me_2(test_client, add_test_users, token):
 
     assert data.status_code == status.HTTP_200_OK
     assert User(**data.json()) == User(**add_test_users[1])
+
+
+@pytest.mark.test_users([{}])
+def test_get_user_me_invalid_username(test_client, add_test_users, auth):
+    token = auth.create_access_token({"sub": add_test_users[0]["username"]+"ThisIsWrongUsername"})
+    data = test_client.get("/users/me/", headers={
+        "Authorization": f"Bearer {token}"
+    })
+
+    assert data.status_code == status.HTTP_401_UNAUTHORIZED
+    assert data.json()["detail"] == "Could not validate credentials"
+
+
+@pytest.mark.slow
+@pytest.mark.test_users([{}])
+def test_get_user_me_timed_out_token(test_client, add_test_users, auth):
+    token = auth.create_access_token({"sub": add_test_users[0]["username"]}, timedelta(seconds=1))
+    data = test_client.get("/users/me/", headers={
+        "Authorization": f"Bearer {token}"
+    })
+    assert data.status_code == status.HTTP_200_OK
+    assert User(**data.json()) == User(**add_test_users[0])
+
+    time.sleep(2)
+    data = test_client.get("/users/me/", headers={
+        "Authorization": f"Bearer {token}"
+    })
+
+    assert data.status_code == status.HTTP_401_UNAUTHORIZED
+    assert data.json()["detail"] == "Could not validate credentials"
