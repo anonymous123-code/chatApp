@@ -74,7 +74,7 @@ def add_test_users(reset_db, auth, request):
             "disabled": user["disabled"]
         }
         generated_users.append(reset_db.db["users"][user["username"]])
-        generated_users[len(generated_users)-1]["password"] = user["password"]
+        generated_users[len(generated_users) - 1]["password"] = user["password"]
         reset_db.save()
     yield generated_users.copy()
     for user in generated_users:
@@ -147,3 +147,21 @@ def test_receive_token(test_client, add_test_users, auth):
     assert current_user == UserInDB(**add_test_users[0])
 
 
+@pytest.mark.test_users([{}])
+def test_receive_token_wrong_username(test_client, add_test_users, auth):
+    data = test_client.post(f"/token", data={
+        "username": add_test_users[0]["username"] + "ThisIsANonExistingUsername",
+        "password": add_test_users[0]["password"]
+    })
+    assert data.status_code == status.HTTP_401_UNAUTHORIZED
+    assert data.json()["detail"] == "Incorrect username or password"
+
+
+@pytest.mark.test_users([{}])
+def test_receive_token_wrong_password(test_client, add_test_users, auth):
+    data = test_client.post(f"/token", data={
+        "username": add_test_users[0]["username"],
+        "password": add_test_users[0]["password"] + "WrongPassword"
+    })
+    assert data.status_code == status.HTTP_401_UNAUTHORIZED
+    assert data.json()["detail"] == "Incorrect username or password"
