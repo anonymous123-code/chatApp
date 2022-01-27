@@ -5,15 +5,12 @@ description = ""
 authors = ["anonymous123-code <61744596+anonymous123-code@users.noreply.github.com>"]
 
 [tool.poetry.dependencies]
-fastapi = "^0.73"
-uvicorn = "^0.17.0"
-python-jose = "^3.3.0"
-passlib = "^1.7.4"
-python-multipart = "^0.0.5"
-python-dotenv = "^0.19.2"
-bcrypt = "^3.2.0"
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+fastapi = {extras = ["all"], version = "^0.73.0"}
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 python = "^3.8"
 pytest = "^6.2.5"
+
 
 [tool.poetry.dev-dependencies]
 
