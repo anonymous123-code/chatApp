@@ -1,15 +1,15 @@
-from _pytest.fixtures import fixture
+import pytest
 from fastapi.testclient import TestClient
 from starlette import status
 
 
-@fixture
+@pytest.fixture
 def open_db():
     import db
     return db
 
 
-@fixture
+@pytest.fixture
 def reset_db(open_db):
     old_users = open_db.db["users"]
     old_invites = open_db.db["invites"]
@@ -25,68 +25,58 @@ def reset_db(open_db):
     open_db.save()
 
 
-# FIXME not clean
-@fixture()
-def add_1_test_user(reset_db):
-    if "test1" in reset_db.db["users"]:
-        raise Exception("shouldnt be in state")
-    reset_db.db["users"]["test1"] = {
-        "username": "test1",
-        "full_name": "full_name",
-        "email": "a@a.a",
-        # passwort: secret
-        "hashed_password": "$2b$12$bKeVp1uTpiw6af1vUMK0w.FYaT.FtwhyFPsnrWdvrMduLq5OyCxFS",
-        "disabled": False
-    }
-    reset_db.save()
-    yield
-    reset_db.db["users"].pop("test1")
-    reset_db.save()
+@pytest.fixture
+def add_test_users(reset_db, auth, request):
+    # Example data:
+    # [{"username":"test1","full_name": "full_name","email": "a@a.a","password":"secret","disabled":False}]
+    # Minimum data: []
+    # Minimum user data: {}
+    # default user data:
+    # {"username":"test{INDEX}","full_name": "test{INDEX} Test","email": "test@test.test","password":"secret","disabled":False}
+    users = request.node.get_closest_marker("test_users", []).args[0]
+
+    def fill_user_with_default_values(i, u):
+        if "username" not in u:
+            u["username"] = "test" + str(i)
+        if "full_name" not in u:
+            u["full_name"] = "test" + str(i) + " Test"
+        if "email" not in u:
+            u["email"] = "test@test.test"
+        if "password" not in u:
+            u["password"] = "secret"
+        if "disabled" not in u:
+            u["disabled"] = False
+        return u
+
+    generated_users = []
+    for index, user in enumerate(users):
+        user = fill_user_with_default_values(index, user)
+        if user["username"] in reset_db.db["users"]:
+            raise Exception("shouldnt be in state")
+        reset_db.db["users"][user["username"]] = {
+            "username": user["username"],
+            "full_name": user["full_name"],
+            "email": user["email"],
+            "hashed_password": auth.get_password_hash(user["password"]),
+            "disabled": user["disabled"]
+        }
+        generated_users.append(reset_db.db["users"][user["username"]])
+        reset_db.save()
+    yield generated_users.copy()
+    for user in generated_users:
+        try:
+            reset_db.db["users"].pop(user["username"])
+        except KeyError:
+            pass
 
 
-@fixture()
-def add_2_test_user(reset_db, add_1_test_user):
-    if "test2" in reset_db.db["users"]:
-        raise Exception("shouldnt be in state")
-    reset_db.db["users"]["test2"] = {
-        "username": "test2",
-        "full_name": "full_name",
-        "email": "a@a.a",
-        # passwort: secret
-        "hashed_password": "$2b$12$bKeVp1uTpiw6af1vUMK0w.FYaT.FtwhyFPsnrWdvrMduLq5OyCxFS",
-        "disabled": False
-    }
-    reset_db.save()
-    yield
-    reset_db.db["users"].pop("test2")
-    reset_db.save()
-
-
-@fixture()
-def add_3_test_user(reset_db, add_2_test_user):
-    if "test3" in reset_db.db["users"]:
-        raise Exception("shouldnt be in state")
-    reset_db.db["users"]["test3"] = {
-        "username": "test3",
-        "full_name": "full_name",
-        "email": "a@a.a",
-        # passwort: secret
-        "hashed_password": "$2b$12$bKeVp1uTpiw6af1vUMK0w.FYaT.FtwhyFPsnrWdvrMduLq5OyCxFS",
-        "disabled": False
-    }
-    reset_db.save()
-    yield
-    reset_db.db["users"].pop("test3")
-    reset_db.save()
-
-
-@fixture
+@pytest.fixture
 def auth(reset_db):
     import auth
     return auth
 
 
-@fixture
+@pytest.fixture
 def test_client(reset_db, auth):
     from main import app
     return TestClient(app)
@@ -103,7 +93,8 @@ def test_register_user(test_client, reset_db, auth):
     assert not reset_db.db["users"]["hi"]["disabled"]
 
 
-def test_register_user_double_username(test_client, add_1_test_user):
+@pytest.mark.test_users([{"username": "test1"}])
+def test_register_user_double_username(test_client, add_test_users):
     data = test_client.post("/users/register?username=test1&password=secret&full_name=Hello&email=h%40h.h")
     assert data.status_code == status.HTTP_401_UNAUTHORIZED
     assert data.json()["detail"] == "username already registered"
