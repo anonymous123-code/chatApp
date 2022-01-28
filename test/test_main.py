@@ -198,7 +198,7 @@ def test_get_user_me_2(test_client, add_test_users, token):
 
 @pytest.mark.test_users([{}])
 def test_get_user_me_invalid_username(test_client, add_test_users, auth):
-    token = auth.create_access_token({"sub": add_test_users[0]["username"]+"ThisIsWrongUsername"})
+    token = auth.create_access_token({"sub": add_test_users[0]["username"] + "ThisIsWrongUsername"})
     data = test_client.get("/users/me/", headers={
         "Authorization": f"Bearer {token}"
     })
@@ -224,3 +224,28 @@ def test_get_user_me_timed_out_token(test_client, add_test_users, auth):
 
     assert data.status_code == status.HTTP_401_UNAUTHORIZED
     assert data.json()["detail"] == "Could not validate credentials"
+
+
+@pytest.mark.test_users([{}, {}])
+def test_get_other_user(test_client, add_test_users, token):
+    data = test_client.get(f"users/{add_test_users[1]['username']}", headers={
+        "Authorization": f"Bearer {token}"
+    })
+
+    assert data.status_code == status.HTTP_200_OK
+    json_data = {k: v for k, v in data.json().items() if v is not None}
+    assert len(json_data) == 1
+    assert json_data["username"] == add_test_users[1]["username"]
+
+
+@pytest.mark.test_users([{}])
+def test_get_other_user_self(test_client, add_test_users, token):
+    data = test_client.get(f"users/{add_test_users[0]['username']}", headers={
+        "Authorization": f"Bearer {token}"
+    })
+
+    assert data.status_code == status.HTTP_200_OK
+
+    json_data = {k: v for k, v in data.json().items() if v is not None}
+    assert len(json_data) == 4
+    assert User(**json_data) == User(**add_test_users[0])
