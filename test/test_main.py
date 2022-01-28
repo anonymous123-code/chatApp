@@ -9,6 +9,7 @@ from jose.utils import base64url_decode
 from starlette import status
 
 from defs import UserInDB, User
+from main import check_email
 
 
 @pytest.fixture
@@ -264,3 +265,12 @@ def test_create_chat(test_client, reset_db, add_test_users, token):
     assert len(reset_db.db["chats"]["0"]["members"]) == 1
     assert reset_db.db["chats"]["0"]["members"][0] == add_test_users[0]["username"]
 
+
+def test_check_email():
+    assert check_email("a@a.a")
+    assert check_email("hello.hello@hello.hello.hello")
+
+
+@pytest.mark.parametrize("test_input", ["hhh", "h@hh", "hh.h", "@h.h", "h@.h", "h@h."])
+def test_check_email_missing_chars(test_input):
+    assert not check_email(test_input)
