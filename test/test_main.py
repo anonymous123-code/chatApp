@@ -249,3 +249,18 @@ def test_get_other_user_self(test_client, add_test_users, token):
     json_data = {k: v for k, v in data.json().items() if v is not None}
     assert len(json_data) == 4
     assert User(**json_data) == User(**add_test_users[0])
+
+
+@pytest.mark.test_users([{}])
+def test_create_chat(test_client, reset_db, add_test_users, token):
+    data = test_client.post("/chats/", headers={
+        "Authorization": f"Bearer {token}"
+    })
+    assert data.status_code == status.HTTP_200_OK
+    assert len(reset_db.db["chats"]) == 1
+    assert reset_db.db["chats"]["0"]["messages"] is not None
+    assert len(reset_db.db["chats"]["0"]["messages"]) == 0
+    assert reset_db.db["chats"]["0"]["members"] is not None
+    assert len(reset_db.db["chats"]["0"]["members"]) == 1
+    assert reset_db.db["chats"]["0"]["members"][0] == add_test_users[0]["username"]
+
