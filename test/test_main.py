@@ -8,13 +8,13 @@ from fastapi.testclient import TestClient
 from jose.utils import base64url_decode
 from starlette import status
 
-from defs import UserInDB, User
-from main import check_email
+from app.defs import UserInDB, User
+from app.main import check_email
 
 
 @pytest.fixture
 def open_db():
-    import db
+    from app import db
     return db
 
 
@@ -36,7 +36,7 @@ def reset_db(open_db):
 
 @pytest.fixture
 def auth(reset_db):
-    import auth
+    from app import auth
     return auth
 
 
@@ -98,7 +98,7 @@ def token(add_test_users, auth, request):
 
 @pytest.fixture
 def test_client(reset_db, auth):
-    from main import app
+    from app.main import app
     return TestClient(app)
 
 
