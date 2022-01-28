@@ -1,18 +1,18 @@
 {
-    "chats": [
-        {
+    "chats": {
+        "1": {
             "messages": [],
             "members": [
                 "anonym123"
             ]
         },
-        {
+        "2": {
             "messages": [],
             "members": [
                 "anonym123"
             ]
         },
-        {
+        "3": {
             "messages": [
                 {
                     "msg": "1",
@@ -26,7 +26,7 @@
                 "anonym"
             ]
         }
-    ],
+    },
     "invites": {
         "EGN99nvWzy": 2,
         "rJGA6LX9dQ": 2

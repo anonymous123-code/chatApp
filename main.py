@@ -20,23 +20,23 @@ def check_email(email):
     return re.match(r"[^@]+@[^@]+\.[^@]+", email)
 
 
-def chat_exists(chat_id: int):
-    return len(db.db["chats"]) > chat_id >= 0
+def chat_exists(chat_id: str):
+    return chat_id in db.db["chats"]
 
 
-def user_in_chat(chat_id: int, username: str):
+def user_in_chat(chat_id: str, username: str):
     return username in db.db["chats"][chat_id]["members"]
 
 
-def message_exists(chat_id: int, message_id: int):
+def message_exists(chat_id: str, message_id: int):
     return message_id < len(db.db["chats"][chat_id]["messages"])
 
 
-def is_owner(chat_id: int, message_id: int, username: str):
+def is_owner(chat_id: str, message_id: int, username: str):
     return db.db["chats"][chat_id]["messages"][message_id]["author"] == username
 
 
-def only_allow_message_owner_edits(chat_id: int, message_id: int, username: string):
+def only_allow_message_owner_edits(chat_id: str, message_id: int, username: string):
     if not chat_exists(chat_id) or not user_in_chat(chat_id, username):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed to edit chat")
     if not message_exists(chat_id, message_id):
@@ -93,7 +93,9 @@ async def read_users_me(current_user: User = Depends(get_current_active_user)):
 
 @app.get("/users/{username}", response_model=User)
 async def get_user(username, current_user=Depends(get_current_active_user)):
-    return User(**db.db["users"][username]) if username == current_user.username else PublicUser(**db.db["users"][username])
+    return User(**db.db["users"][username]) if username == current_user.username else PublicUser(
+        **db.db["users"][username]
+    )
 
 
 @app.get("/invite/{invite}")
@@ -118,6 +120,7 @@ def delete_invite(invite, current_user: User = Depends(get_current_active_user))
 
 @app.post("/chats/{chat_id}/invite")
 def generate_invite(chat_id: int, current_user: User = Depends(get_current_active_user)):
+    chat_id = str(chat_id)
     if not chat_exists(chat_id) or not user_in_chat(chat_id, current_user.username):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Non-member user can't create invites")
     invite = generate_random_invite(10)
@@ -132,6 +135,7 @@ def generate_invite(chat_id: int, current_user: User = Depends(get_current_activ
 
 @app.get("/chats/{chat_id}/invites")
 def get_invites(chat_id: int, current_user: User = Depends(get_current_active_user)):
+    chat_id = str(chat_id)
     if not chat_exists(chat_id) or not user_in_chat(chat_id, current_user.username):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed to view chat invites")
     return [invite for invite, chat in db.db["invites"].items() if chat == chat_id]
@@ -139,6 +143,7 @@ def get_invites(chat_id: int, current_user: User = Depends(get_current_active_us
 
 @app.get("/chats/{chat_id}/messages")
 def get_messages(chat_id: int, current_user: User = Depends(get_current_active_user)):
+    chat_id = str(chat_id)
     if not chat_exists(chat_id) or not user_in_chat(chat_id, current_user.username):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed to view chat")
     return db.db["chats"][chat_id]["messages"]
@@ -146,6 +151,7 @@ def get_messages(chat_id: int, current_user: User = Depends(get_current_active_u
 
 @app.post("/chats/{chat_id}/messages")
 def send_message(chat_id: int, msg: str, current_user: User = Depends(get_current_active_user)):
+    chat_id = str(chat_id)
     if not chat_exists(chat_id) or not user_in_chat(chat_id, current_user.username):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed to send in chat")
     db.db["chats"][chat_id]["messages"].append({
@@ -159,6 +165,7 @@ def send_message(chat_id: int, msg: str, current_user: User = Depends(get_curren
 
 @app.delete("/chats/{chat_id}/messages/{message_id}")
 def delete_message(chat_id: int, message_id: int, current_user: User = Depends(get_current_active_user)):
+    chat_id = str(chat_id)
     only_allow_message_owner_edits(chat_id, message_id, current_user.username)
     db.db["chats"][chat_id]["messages"].pop(message_id)
     db.save()
@@ -166,6 +173,7 @@ def delete_message(chat_id: int, message_id: int, current_user: User = Depends(g
 
 @app.post("/chats/{chat_id}/messages/{message_id}")
 def edit_message(chat_id: int, message_id: int, message: str, current_user: User = Depends(get_current_active_user)):
+    chat_id = str(chat_id)
     only_allow_message_owner_edits(chat_id, message_id, current_user.username)
     db.db["chats"][chat_id]["messages"][message_id]["msg"] = message
     db.db["chats"][chat_id]["messages"][message_id]["edited"] = True
@@ -174,38 +182,48 @@ def edit_message(chat_id: int, message_id: int, message: str, current_user: User
 
 @app.get("/chats/{chat_id}/members")
 def get_members(chat_id: int, current_user: User = Depends(get_current_active_user)):
+    chat_id = str(chat_id)
     if not chat_exists(chat_id) or not user_in_chat(chat_id, current_user.username):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not a member")
     return db.db["chats"][chat_id]["members"]
 
 
 @app.delete("/chats/{chat_id}/members/{member_name}")
-def kick_member(chat_id: int, member_name, current_user: User = Depends(get_current_active_user)):
+def kick_member(chat_id: int, member_name: str, current_user: User = Depends(get_current_active_user)):
+    chat_id = str(chat_id)
     if not chat_exists(chat_id) or not user_in_chat(chat_id, current_user.username):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed to edit chat")
     if not user_in_chat(chat_id, member_name):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member not found")
-    #FIXME pop braucht index, nicht element
+    # FIXME pop braucht index, nicht element
     db.db["chats"][chat_id]["members"].pop(member_name)
     db.save()
 
 
 @app.post("/chats/")
 def create_chat(current_user: User = Depends(get_current_active_user)):
-    db.db["chats"].append({"messages": [], "members": [current_user.username]})
+    def get_first_free_key():
+        keys = db.db["chats"].keys()
+        for i in range(len(keys)+1):
+            if str(i) not in keys:
+                return str(i)
+
+    key = get_first_free_key()
+    db.db["chats"][key] = {"messages": [], "members": [current_user.username]}
     db.save()
     return {
-        "id": len(db.db["chats"]) - 1
+        "id": key
     }
 
 
 @app.get("/chats/")
 def get_chats(current_user: User = Depends(get_current_active_user)):
-    return {i: chat for i, chat in enumerate(db.db["chats"]) if current_user.username in chat["members"]}
+    return {i: chat for i, chat in db.db["chats"].items() if current_user.username in chat["members"]}
 
 
 @app.delete("/chats/{chat_id}")
 def delete_chat(chat_id: int, current_user: User = Depends(get_current_active_user)):
+    chat_id = str(chat_id)
     if not chat_exists(chat_id) or not user_in_chat(chat_id, current_user.username):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed to edit chat")
     db.db["chats"].pop(chat_id)
