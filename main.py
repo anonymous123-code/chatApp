@@ -125,7 +125,7 @@ def generate_invite(chat_id: int, current_user: User = Depends(get_current_activ
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Non-member user can't create invites")
     invite = generate_random_invite(10)
     while invite in db.db["invites"]:
-        invite = generate_invite(10)
+        invite = generate_random_invite(10)
     db.db["invites"][invite] = chat_id
     db.save()
     return {
