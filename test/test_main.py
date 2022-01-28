@@ -48,7 +48,7 @@ def add_test_users(reset_db, auth, request):
     # default user data:
     # {"username":"test{INDEX}","full_name": "test{INDEX} Test","email": "test@test.test","password":"secret","disabled":False}
     marker = request.node.get_closest_marker("test_users")
-    users = marker.args[0] if marker else []
+    users = marker.args[0] if marker else [{}]
 
     def fill_user_with_default_values(i, u):
         if "username" not in u:
