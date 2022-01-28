@@ -91,9 +91,9 @@ async def read_users_me(current_user: User = Depends(get_current_active_user)):
     return current_user
 
 
-@app.get("/users/{username}", response_model=PublicUser)
-async def get_user(username, _=Depends(get_current_active_user)):
-    return db.db["users"][username]
+@app.get("/users/{username}", response_model=User)
+async def get_user(username, current_user=Depends(get_current_active_user)):
+    return User(**db.db["users"][username]) if username == current_user.username else PublicUser(**db.db["users"][username])
 
 
 @app.get("/invite/{invite}")
