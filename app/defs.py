@@ -1,6 +1,11 @@
-from typing import Optional
+from typing import Optional, List
 
-from pydantic import BaseModel
+import pydantic
+
+
+class BaseModel(pydantic.BaseModel):
+    class Config:
+        orm_mode = True
 
 
 class Token(BaseModel):
@@ -13,6 +18,7 @@ class TokenData(BaseModel):
 
 
 class PublicUser(BaseModel):
+    id: int
     username: str
 
 
@@ -24,3 +30,35 @@ class User(PublicUser):
 
 class UserInDB(User):
     hashed_password: str
+
+
+class Message(BaseModel):
+    id: int
+    content: str
+    timestamp: str
+    author: PublicUser
+
+
+class Chat(BaseModel):
+    messages: List[Message]
+    members: List[PublicUser]
+
+
+class Invite(BaseModel):
+    invite: str
+
+
+class UserList(BaseModel):
+    __root__: List[User]
+
+
+class MessageList(BaseModel):
+    __root__: List[Message]
+
+
+class ChatList(BaseModel):
+    __root__: List[Chat]
+
+
+class StrList(BaseModel):
+    __root__: List[str]

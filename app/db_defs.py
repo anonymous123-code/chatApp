@@ -1,14 +1,13 @@
 import sqlalchemy
 from sqlalchemy import Integer, Column, String, Boolean, ForeignKey, Table
-from sqlalchemy.orm import registry, relationship
+from sqlalchemy.orm import relationship, declarative_base
 
-mapper_registry = registry()
-Base = mapper_registry.generate_base()
+Base = declarative_base()
 
 chat_association_table = Table(
     'chat_association',
     Base.metadata,
-    Column('user_id', ForeignKey('users.id')),
+    Column('user_id', ForeignKey('users.username')),
     Column('chat_id', ForeignKey('chats.id'))
 )
 
@@ -16,9 +15,8 @@ chat_association_table = Table(
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
-    name = Column(String(30), nullable=False)
-    fullname = Column(String, nullable=False)
+    username = Column(String(30), nullable=False, primary_key=True)
+    full_name = Column(String, nullable=False)
     email = Column(String, nullable=False)
     hashed_password = Column(String, nullable=False)
     disabled = Column(Boolean, nullable=False, default=True)
@@ -56,7 +54,7 @@ class Message(Base):
     id = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
     content = Column(String, nullable=False)
     timestamp = Column(sqlalchemy.BigInteger, nullable=False)
-    author_id = Column(Integer, ForeignKey('users.id'))
+    author_id = Column(Integer, ForeignKey('users.username'))
     author = relationship("User", back_populates="messages")
     chat_id = Column(Integer, ForeignKey("chats.id"), nullable=False)
     chat = relationship("Chat", back_populates="messages")
@@ -67,7 +65,7 @@ class Message(Base):
 
 
 class Invite(Base):
-    ___tablename__ = "invites"
+    __tablename__ = "invites"
 
     id = Column(String, primary_key=True, nullable=False)
 

@@ -7,10 +7,12 @@ from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from passlib.context import CryptContext
+from sqlalchemy.orm import Session
 from starlette import status
 
-from db import db
-from defs import UserInDB, User, TokenData
+import db_defs
+from db import get_db
+from defs import TokenData
 
 load_dotenv()
 SECRET_KEY = environ.get("AUTHKEY")
@@ -29,14 +31,13 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 
-def get_user(user_db, username: str):
-    if username in user_db:
-        user_dict = user_db[username]
-        return UserInDB(**user_dict)
+def get_user(db: Session, username: str):
+    result = db.query(db_defs.User).filter_by(username=username)
+    return result.scalar()
 
 
-def authenticate_user(user_db, username: str, password: str):
-    user = get_user(user_db, username)
+def authenticate_user(db, username: str, password: str):
+    user = get_user(db, username)
     if not user:
         return False
     if not verify_password(password, user.hashed_password):
@@ -55,7 +56,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return encoded_jwt
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme)):
+async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -69,13 +70,13 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         token_data = TokenData(username=username)
     except JWTError:
         raise credentials_exception
-    user = get_user(db["users"], username=token_data.username)
+    user = get_user(db, token_data.username)
     if user is None:
         raise credentials_exception
     return user
 
 
-async def get_current_active_user(current_user: User = Depends(get_current_user)):
+async def get_current_active_user(current_user: db_defs.User = Depends(get_current_user)):
     if current_user.disabled:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
