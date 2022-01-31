@@ -8,6 +8,7 @@ authors = ["anonymous123-code <61744596+anonymous123-code@users.noreply.github.c
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 fastapi = {extras = ["all"], version = "^0.73.0"}
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+SQLAlchemy = "^1.4.31"
 python = "^3.8"
 
 
