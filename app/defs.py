@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 import pydantic
 
@@ -55,8 +55,8 @@ class MessageList(BaseModel):
     __root__: List[Message]
 
 
-class ChatList(BaseModel):
-    __root__: List[Chat]
+class ChatDict(BaseModel):
+    __root__: Dict[str, Chat]
 
 
 class StrList(BaseModel):

@@ -12,7 +12,7 @@ from app import db_defs
 from app.auth import get_password_hash, get_current_active_user, authenticate_user, ACCESS_TOKEN_EXPIRE_MINUTES, \
     create_access_token
 from app.db import get_db, engine
-from app.defs import Token, PublicUser, Invite, StrList, MessageList, UserList, ChatList, User
+from app.defs import Token, PublicUser, Invite, StrList, MessageList, UserList, User, ChatDict
 
 db_defs.Base.metadata.create_all(bind=engine)
 
@@ -229,9 +229,10 @@ def create_chat(current_user: db_defs.User = Depends(get_current_active_user),
     }
 
 
-@app.get("/chats/", response_model=ChatList)
+@app.get("/chats/", response_model=ChatDict)
 def get_chats(current_user: db_defs.User = Depends(get_current_active_user)):
-    return ChatList.from_orm(current_user.chats)
+    print(current_user.chats[0])
+    return {chat.id: chat for chat in current_user.chats}
 
 
 @app.delete("/chats/{chat_id}")

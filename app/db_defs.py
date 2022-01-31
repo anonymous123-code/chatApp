@@ -28,7 +28,7 @@ class User(Base):
     )
 
     def __repr__(self):
-        return f"User(id={self.id!r}, name={self.name!r}, fullname={self.fullname!r}, email={self.email!r}, " \
+        return f"User(name={self.username!r}, full_name={self.full_name!r}, email={self.email!r}, " \
                f"hashed_password={self.hashed_password!r}, disabled={self.disabled!r})"
 
 
