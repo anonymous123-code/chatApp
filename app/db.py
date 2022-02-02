@@ -1,8 +1,14 @@
 # import json
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
-engine = create_engine("sqlite+pysqlite:///:memory:", echo=True, future=True, connect_args={"check_same_thread": False})
+engine = create_engine(
+    "sqlite+pysqlite:///test.db",
+    echo=True, future=True,
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool
+)
 SessionLocal = sessionmaker(autoflush=False, autocommit=False, bind=engine)
 
 
