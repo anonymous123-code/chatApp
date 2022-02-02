@@ -32,11 +32,11 @@ def user_exists(db: Session, username: str):
 
 
 def user_in_chat(chat: db_defs.Chat, username: str):
-    return chat is not None and chat.members.any(db_defs.User.username == username)
+    return chat is not None and len([user for user in chat.members if user.username == username])
 
 
 def get_message(chat: db_defs.Chat, message_id: int):
-    return None if chat is None else chat.messages.has(db_defs.Message.id == message_id)
+    return None if chat is None else [message for message in chat.messages if message.id == message_id][0]
 
 
 def is_owner(message: db_defs.Message, username: str):
@@ -115,7 +115,7 @@ def use_invite(invite, current_user: db_defs.User = Depends(get_current_active_u
     invite = db.query(db_defs.Invite).filter_by(id=invite).scalar()
     if invite is None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid invite")
-    if invite.chat.members.any(db_defs.User.username == current_user.username):
+    if user_in_chat(invite.chat, current_user.username):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Joined already")
     invite.chat.members.add(current_user)
     db.commit()
@@ -126,7 +126,7 @@ def delete_invite(invite, current_user: db_defs.User = Depends(get_current_activ
     invite = db.query(db_defs.Invite).filter_by(id=invite).scalar()
     if invite is None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid invite")
-    if not invite.chat.members.any(db_defs.User.username == current_user.username):
+    if not user_in_chat(invite.chat, current_user.username):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Non-member user can't delete invite")
     db.delete(invite)
     db.commit()
@@ -231,7 +231,6 @@ def create_chat(current_user: db_defs.User = Depends(get_current_active_user),
 
 @app.get("/chats/", response_model=ChatDict)
 def get_chats(current_user: db_defs.User = Depends(get_current_active_user)):
-    print(current_user.chats[0])
     return {chat.id: chat for chat in current_user.chats}
 
 
