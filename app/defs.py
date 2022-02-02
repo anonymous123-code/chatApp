@@ -49,7 +49,7 @@ class Invite(BaseModel):
 
 
 class UserList(BaseModel):
-    __root__: List[User]
+    __root__: List[PublicUser]
 
 
 class MessageList(BaseModel):
