@@ -117,7 +117,7 @@ def use_invite(invite, current_user: db_defs.User = Depends(get_current_active_u
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid invite")
     if user_in_chat(invite.chat, current_user.username):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Joined already")
-    invite.chat.members.add(current_user)
+    invite.chat.members.append(current_user)
     db.commit()
 
 
