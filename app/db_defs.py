@@ -54,6 +54,7 @@ class Message(Base):
     id = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
     content = Column(String, nullable=False)
     timestamp = Column(sqlalchemy.BigInteger, nullable=False)
+    edited = Column(Boolean, nullable=False, default=False)
     author_id = Column(Integer, ForeignKey('users.username'))
     author = relationship("User", back_populates="messages")
     chat_id = Column(Integer, ForeignKey("chats.id"), nullable=False)

@@ -35,6 +35,7 @@ class Message(BaseModel):
     id: int
     content: str
     timestamp: str
+    edited: bool = False
     author: PublicUser
 
 
