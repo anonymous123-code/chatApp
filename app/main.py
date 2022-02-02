@@ -7,6 +7,7 @@ from datetime import timedelta
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from fastapi.middleware.cors import CORSMiddleware
 
 from app import db_defs
 from app.auth import get_password_hash, get_current_active_user, authenticate_user, ACCESS_TOKEN_EXPIRE_MINUTES, \
@@ -17,6 +18,14 @@ from app.defs import Token, PublicUser, Invite, StrList, MessageList, UserList, 
 db_defs.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:8080"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 def check_email(email):
