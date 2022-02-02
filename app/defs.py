@@ -40,6 +40,7 @@ class Message(BaseModel):
 
 
 class Chat(BaseModel):
+    id: int
     messages: List[Message]
     members: List[PublicUser]
 
@@ -56,8 +57,8 @@ class MessageList(BaseModel):
     __root__: List[Message]
 
 
-class ChatDict(BaseModel):
-    __root__: Dict[str, Chat]
+class ChatList(BaseModel):
+    __root__: List[Chat]
 
 
 class StrList(BaseModel):

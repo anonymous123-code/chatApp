@@ -12,7 +12,7 @@ from app import db_defs
 from app.auth import get_password_hash, get_current_active_user, authenticate_user, ACCESS_TOKEN_EXPIRE_MINUTES, \
     create_access_token
 from app.db import get_db, engine
-from app.defs import Token, PublicUser, Invite, StrList, MessageList, UserList, User, ChatDict
+from app.defs import Token, PublicUser, Invite, StrList, MessageList, UserList, User, ChatList
 
 db_defs.Base.metadata.create_all(bind=engine)
 
