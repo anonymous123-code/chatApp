@@ -229,9 +229,9 @@ def create_chat(current_user: db_defs.User = Depends(get_current_active_user),
     }
 
 
-@app.get("/chats/", response_model=ChatDict)
+@app.get("/chats/", response_model=ChatList)
 def get_chats(current_user: db_defs.User = Depends(get_current_active_user)):
-    return {chat.id: chat for chat in current_user.chats}
+    return current_user.chats
 
 
 @app.delete("/chats/{chat_id}")
