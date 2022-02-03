@@ -10,9 +10,9 @@ from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 from starlette import status
 
-from app import db_defs
-from app.db import get_db
-from app.defs import TokenData
+import db_defs
+from db import get_db
+from defs import TokenData
 
 load_dotenv()
 SECRET_KEY = environ.get("AUTHKEY")

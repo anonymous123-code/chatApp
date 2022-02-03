@@ -9,11 +9,11 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
 
-from app import db_defs
-from app.auth import get_password_hash, get_current_active_user, authenticate_user, ACCESS_TOKEN_EXPIRE_MINUTES, \
+import db_defs
+from auth import get_password_hash, get_current_active_user, authenticate_user, ACCESS_TOKEN_EXPIRE_MINUTES, \
     create_access_token
-from app.db import get_db, engine
-from app.defs import Token, PublicUser, Invite, StrList, MessageList, UserList, User, ChatList
+from db import get_db, engine
+from defs import Token, PublicUser, Invite, StrList, MessageList, UserList, User, ChatList
 
 db_defs.Base.metadata.create_all(bind=engine)
 
